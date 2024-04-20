@@ -1,0 +1,41 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS411 Project</title>
+</head>
+<body>
+    <h1>CS411 Project</h1>
+
+    <tbody id="foodBody">
+        <!-- Attendance rows will be inserted here -->
+    </tbody>
+
+    <script>
+       
+       $(document).ready(function() {
+            $.ajax({
+                url: '/api/Food',
+                method: 'GET',
+                success: function(data) {
+                var rows = '';
+                data.forEach(function(Food, index) {
+                    rows += `<tr>
+                            <th scope="row">${index + 1}</th>
+                            <td>${Food.FoodName}</td>
+                            <td>${Food.Mesures}</td>
+                            </tr>`;
+                });
+                $('#foodBody').html(rows);
+                },
+                error: function() {
+                alert('Failed to load attendance data.');
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
