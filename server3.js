@@ -91,6 +91,64 @@ app.get('/api/MyRecipes', function(req, res) {
     });
 });
 
+app.get('/api/Filtered', function(req, res) {
+    var sql = `
+        (
+        SELECT r.RecipeTitle, r.Ingredients, r.Directions
+        FROM Recipe r
+        JOIN Food f ON r.Ingredients LIKE CONCAT('%', f.FoodName, '%') 
+        WHERE f.Category = 'Dairy products'
+        )
+        INTERSECT
+        (
+        SELECT r.RecipeTitle, r.Ingredients, r.Directions
+        FROM Recipe r
+        JOIN Food f ON r.Ingredients LIKE CONCAT('%', f.FoodName, '%') 
+        WHERE f.Category LIKE '%Seafood'
+        ) LIMIT 15;        
+    `;
+    
+    connection.query(sql, function(err, results) {
+        if (err) {
+            console.error('Error fetching attendance data:', err);
+            res.status(500).send({ message: 'Error fetching attendance data', error: err });
+            return;
+        }
+        res.json(results);
+    });
+});
+
+
+// Query for loading the recipes by favorite ranking
+
+app.get('/api/Fav_Ranking', function(req, res) {
+    var sql = `
+        SELECT 
+            c.RecipeTitle, 
+            COUNT(c.FavoriteID) AS FavoriteCount
+        FROM 
+            Contains c
+        JOIN 
+            Favorites f ON c.FavoriteID = f.FavoriteID
+        GROUP BY 
+            c.RecipeTitle
+        ORDER BY 
+            FavoriteCount DESC
+        LIMIT 15;
+       
+    `;
+    
+    connection.query(sql, function(err, results) {
+        if (err) {
+            console.error('Error fetching attendance data:', err);
+            res.status(500).send({ message: 'Error fetching attendance data', error: err });
+            return;
+        }
+        res.json(results);
+    });
+});
+
+
 app.get('', function(req, res) {
     res.render('index', { title: 'CS411 Project' });
 });
