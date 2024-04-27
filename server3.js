@@ -148,6 +148,32 @@ app.get('/api/Fav_Ranking', function(req, res) {
     });
 });
 
+// // Query for loading users by number of recipes favorites
+
+// app.get('/api/Users_Ranking', function(req, res) {
+//     var sql = `
+//     SELECT 
+//         User.UserName,
+//         COUNT(MyRecipes.RecipeTitle) AS RecipesUploaded
+//     FROM 
+//         User
+//     RIGHT JOIN
+//         MyRecipes ON User.UserID = MyRecipes.UserID
+//     GROUP BY 
+//         MyRecipes.UserID
+//     ORDER BY 
+//         RecipesUploaded DESC;
+//     `;
+    
+//     connection.query(sql, function(err, results) {
+//         if (err) {
+//             console.error('Error fetching attendance data:', err);
+//             res.status(500).send({ message: 'Error fetching attendance data', error: err });
+//             return;
+//         }
+//         res.json(results);
+//     });
+// });
 
 app.get('', function(req, res) {
     res.render('index', { title: 'CS411 Project' });

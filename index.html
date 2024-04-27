@@ -15,30 +15,56 @@
   <div class="container mt-4">
     <div class="card">
       <div class="card-body">
-        <h2>Please mark your attendance below</h2>
+        <h2>Find Your Recipe!</h2>
         <form action="mark" method="POST">
           <div class="form-group">
             <!-- <label for="netid">Net ID</label>
             <input type="text" class="form-control col-lg-9" id="netid" placeholder="Enter Net ID" name="netid">
           </div>
           <button type="submit" class="btn btn-primary">Submit</button> -->
-          <div class="dropdown">
-            <button class="dropbtn">Category</button>
-            <div class="dropdown-content" id="myDropdown">
-                <a href="#" onclick="selectCategory('Ingredients')">Option 1</a>
-                <a href="#" onclick="selectCategory('Option 2')">Option 2</a>
-                <a href="#" onclick="selectCategory('Option 3')">Option 3</a>
-              </div>
-          </div>
-          
+          <label for="ingred">Choose Ingredients</label>
+          <input type="text" list="ingredients" />
+          <datalist id="ingredients">
+            <div id="ingredOptions"></div>
+          </datalist>
+          <br><br>
+          <label for="ingred">Choose Category</label>
+          <input type="text" list="categories" />
+          <datalist id="categories">
+            <div id="catOptions"></div>
+          </datalist>
+          <br><br>
+          <label for="ingred">Choose Nutrition</label>
+          <input type="text" list="cars" />
+          <datalist id="cars">
+            <option>Protein</option>
+            <option>Fat</option>
+            <option>Carbs</option>
+          </datalist>
+          <br><br>
+        <label for="ingred">Nutrition Range (in natural number (g))</label>
+        <input type="text" id="getGreaterThan" placeholder="greater than?">
+        <input type="text" id="getLessThan" placeholder="less than?">
+        
+        <br><br>
         </form>
         <!-- Button to Load Attendance -->
-        <button type="button" class="btn btn-info mt-3" id="loadRecipeBtn" data-toggle="modal" data-target="#viewRecipeModal">
+        <!-- <button type="button" class="btn btn-info mt-3" id="loadRecipeBtn" data-toggle="modal" data-target="#viewRecipeModal">
           View Recipe
         </button>
         <button type="button" class="btn btn-info mt-3" id="loadFoodBtn" data-toggle="modal" data-target="#viewFoodModal">
             View Food
+          </button> -->
+          <button type="button" class="btn btn-info mt-3" id="loadFiltered" data-toggle="modal" data-target="#viewFilteredModal">
+            Find!
           </button>
+          <br><br>
+        <button type="button" class="btn btn-info mt-3" id="loadFavoriteRankingBtn" data-toggle="modal" data-target="#viewRankingModal">
+            View Favorite Ranking
+        </button>
+        <button type="button" class="btn btn-info mt-3" id="loadUserRankingBtn" data-toggle="modal" data-target="#viewUserRankingModal">
+            View User Ranking
+        </button>
           <!-- <button type="button" class="btn btn-info mt-3" id="loadFavoriteBtn" data-toggle="modal" data-target="#viewFavoriteModal">
             View Favorite
           </button>
@@ -111,13 +137,91 @@
       </div>
     </div>
   </div>
+
+  <div class="modal fade" id="viewRankingModal" tabindex="-1" role="dialog" aria-labelledby="viewRankingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="viewRankingModalLabel">Attendance Records</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">RecipeTitle</th>
+                <th scope="col">FavoriteCount</th>
+              </tr>
+            </thead>
+            <tbody id="rankBody">
+              <!-- Attendance rows will be inserted here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="viewUserRankingModal" tabindex="-1" role="dialog" aria-labelledby="viewUserRankingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="viewUserRankingModalLabel">Attendance Records</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">UserName</th>
+                <th scope="col">RecipesUploaded</th>
+              </tr>
+            </thead>
+            <tbody id="rankBody">
+              <!-- Attendance rows will be inserted here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-  <script>
-    var selectedCategory = ""; // Variable to store the selected value
 
-    function selectCategory(option) {
-        selectedCategory = option; // Store the selected value
+
+</div>
+
+
+
+  <script>
+    var listIngredients = ['milk','milk skim','buttermilk','evaporated milk','fortified milk','powdered milk','skim, instant','skim, non-instant','goat milk','1/2 cup ice cream','cocoa','skim. milk','cornstarch','custard','ice cream','ice milk','cream','whipping','cheese','uncreamed','cheddar','mozzarella','cream cheese','processed cheese','roquefort type','swiss','egg','eggs scrambled or fried','yolks','butter','hydrogenated cooking fat','lard','margarine','margarine, 2 pat or','mayonnaise','corn oil','olive oil','sunflower oil','french dressing','thousand island dressing','pork','bacon','beef','hamburger','ground lean','roast beef','steak','steak, lean, as round','corned beef','corned beef hash canned','corned beef hash dried','pot-pie','corned beef hash stew','chicken','fried, breast or leg and thigh chicken','roasted chicken','chicken livers, fried','duck','lamb','leg roasted','shoulder, braised','pork, chop, 1 thick','ham pan-broiled','ham','canned ham','pork roast','pork sausage','turkey','veal','roast','clams','cod','crab meat','fish sticks fried','flounder','haddock','halibut','herring','lobster','mackerel','oysters','oyster stew','salmon','sardines','scallops','shad','shrimp','swordfish','tuna','artichoke','asparagus','bean','lima','lima, dry, cooked','navy','kidney','bean sprouts','greens','beet','broccoli','brussels sprouts','sauerkraut','cabbage','carrot','raw, grated','strips','cauliflower','celery','stalk','chard steamed','collards','corn','canned','cucumbers','dandelion greens','eggplant','endive','kale','kohlrabi','lambs quarters, steamed','lentils','lettuce','iceberg','mushroom','mustard greens','okra','onion','raw, green','parsley','parsnip','pea','steamed peas','frozen peas','split cooked peas','heated peas','pepper','peppers raw, green, sweet','peppers with beef and crumbs','potatoes, baked','french fried','potatoes mashed with milk and butter','potatoes, pan-tried','scalloped with cheese potatoes','steamed potatoes before peeling','potato chips','radish','rutabagas','soybean','spinach','squash','winter, mashed','sweet potato','candied','tomato','raw, 2 by 2 1/2','tomato juice','tomato catsup','turnip greens','turnips, steamed','watercress stems, raw','apple juice canned','vinegar','apple','stewed or canned','apricots','dried, uncooked','fresh','nectar, or juice','avocado','banana','blackberries','blueberries','cantaloupe','cherries','cherry','fresh, raw','cranberry','dates','fig','fresh, raw figs','figs canned with syrup','fruit cocktail, canned','grapefruit','grapefruit, fresh, 5" diameter','grapefruit juice','grapes','european, as muscat, tokay','grape juice','lemon juice','lemonade concentratefrozen','limeade concentrate frozen','olive','olivesripe','oranges 3" diameter','orange juice','frozen','papaya','peaches','pears','raw, 3 by 2v','persimmons','pineapple','pineapple crushed','raw, diced','pineapple juice','plum','raw, 2" diameter','prune','prune juice','raisin','raspberries','raw, red','rhubarb sweetened','strawberries','strawberry','raw','tangerine','watermelon','biscuits','bran flakes','bread','rye','white, 20 slices, or','wheat','corn bread ground meal','cornflakes','corn grits cooked','corn meal','crackers','soda','farina','flour','wheat (all purpose)','wheat (whole)','macaroni','baked with cheese','muffins','noodles','oatmeal','pancakes 4" diam.','wheat, pancakes 4" diam.','pizza sauce','popcorn salted','puffed rice','puffed wheat presweetened','rice','converted','white','rice flakes','rice polish','rolls','of refined flour','spaghetti with meat sauce','with tomatoes and cheese','spanish rice','shredded wheat biscuit','waffles','wheat germ','wheat-germ cereal toasted','wheat meal cereal unrefined','wheat, cooked','bean soups','beef soup','bouillon','chicken soup','clam chowder','cream soups','noodle','split-pea soup','tomato soup','vegetable','apple betty','bread pudding','cakes','chocolate fudge','cupcake','fruit cake','gingerbread','plain, with no icing','sponge cake','candy','chocolate creams','fudge','hard candies','marshmallows','chocolate','chocolate syrup','doughnut','gelatin, made with water','9" diam. pie','cherry pie','lemon meringue','mince','pumpkin pie','puddings sugar','sugar','ices','honey','preserves','jellies','molasses','cane syrup','brown sugar','syrup','table blends sugar','tapioca cream pudding','almonds','roasted and salted','brazil nuts','cashews','coconut sweetened','peanut butter','peanut butter, natural','peanuts','pecans','sesame seed','sunflower seed','walnut','beer','gin','wine','table (12.2% alcohol)','carbonated drinks artificially sweetened','club soda','cola drinks','fruit-flavored soda','ginger ale','root beer','coffee','tea'];
+    var ingredOption = "";
+    for (let i = 0; i < listIngredients.length; i++)
+    {
+        ingredOption += '<option value="' + listIngredients[i] + '">';
+    }
+    $("#ingredOptions").html(ingredOption);
+
+    var listCategory = ['Dairy products','Fats, Oils, Shortenings','Meat, Poultry','Fish, Seafood','Vegetables A-E','Vegetables F-P','Vegetables R-Z','Fruits A-F','Fruits G-P','Fruits R-Z','Breads, cereals, fastfood,grains','Soups','Desserts, sweets','Jams, Jellies','Seeds and Nuts','Drinks,Alcohol, Beverages'];
+    var catOption = "";
+    for (let i = 0; i < listCategory.length; i++)
+    {
+        catOption += '<option value="' + listCategory[i] + '">';
+    }
+    $("#catOptions").html(catOption);
+
+    var lessThan = -1;
+    function getLessThan() {
+        lessThan = document.getElementById("userInput").value;
+    }
+    var greaterThan = -1;
+    function getGreaterThan() {
+        greaterThan = document.getElementById("userInput").value;
     }
 
   $(document).ready(function() {
@@ -137,6 +241,34 @@
                          <button class="btn btn-warning btn-sm" data-netid="${Recipe.Ingredients}">Modify</button>
                          <button class="btn btn-danger btn-sm" data-netid="${Recipe.Ingredients}">Delete</button>
                        </td>
+                     </tr>`;
+          });
+          $('#recipeBody').html(rows);
+        },
+        error: function() {
+          alert('Failed to load attendance data.');
+        }
+      });
+    });
+  });
+
+  $(document).ready(function() {
+    $('#loadFiltered').click(function() {
+      $.ajax({
+        url: '/api/Filtered',
+        method: 'GET',
+        success: function(data) {
+          var rows = '';
+          data.forEach(function(Recipe, index) {
+            rows += `<tr>
+                       <th scope="row">${index + 1}</th>
+                       <td>${Recipe.RecipeTitle}</td>
+                       <td>${Recipe.Ingredients}</td>
+                       <td>${Recipe.Directions}</td>
+                    //    <td>
+                    //      <button class="btn btn-warning btn-sm" data-netid="${Recipe.Ingredients}">Modify</button>
+                    //      <button class="btn btn-danger btn-sm" data-netid="${Recipe.Ingredients}">Delete</button>
+                    //    </td>
                      </tr>`;
           });
           $('#recipeBody').html(rows);
@@ -171,6 +303,29 @@
                      </tr>`;
           });
           $('#foodBody').html(rows);
+        },
+        error: function() {
+          alert('Failed to load attendance data.');
+        }
+      });
+    });
+  });
+
+  $(document).ready(function() {
+    $('#loadFavoriteRankingBtn').click(function() {
+      $.ajax({
+        url: '/api/Fav_Ranking',
+        method: 'GET',
+        success: function(data) {
+          var rows = '';
+          data.forEach(function(Food, index) {
+            rows += `<tr>
+                       <th scope="row">${index + 1}</th>
+                       <td>${Food.RecipeTitle}</td>
+                       <td>${Food.FavoriteCount}</td>
+                     </tr>`;
+          });
+          $('#rankBody').html(rows);
         },
         error: function() {
           alert('Failed to load attendance data.');
