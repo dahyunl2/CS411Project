@@ -22,27 +22,27 @@
             <input type="text" class="form-control col-lg-9" id="netid" placeholder="Enter Net ID" name="netid">
           </div>
           <button type="submit" class="btn btn-primary">Submit</button> -->
-          <label for="ingred">Choose Ingredients</label>
+          <label for="ingred">Choose Ingredients: </label>
           <input type="text" list="ingredients" />
           <datalist id="ingredients">
             <div id="ingredOptions"></div>
           </datalist>
           <br><br>
-          <label for="ingred">Choose Category</label>
+          <label for="ingred">Choose Category: </label>
           <input type="text" list="categories" />
           <datalist id="categories">
             <div id="catOptions"></div>
           </datalist>
           <br><br>
-          <label for="ingred">Choose Nutrition</label>
-          <input type="text" list="cars" />
-          <datalist id="cars">
+          <label for="nutrition">Choose Nutrition: </label>
+          <input type="text" list="nutrition" />
+          <datalist id="nutrition">
             <option>Protein</option>
             <option>Fat</option>
             <option>Carbs</option>
           </datalist>
           <br><br>
-        <label for="ingred">Nutrition Range (in natural number (g))</label>
+        <label for="ingred">Nutrition Range (in natural number (g)): </label>
         <input type="text" id="getGreaterThan" placeholder="greater than?">
         <input type="text" id="getLessThan" placeholder="less than?">
         
@@ -64,6 +64,13 @@
         </button>
         <button type="button" class="btn btn-info mt-3" id="loadUserRankingBtn" data-toggle="modal" data-target="#viewUserRankingModal">
             View User Ranking
+        </button>
+        <br><br>
+    
+        <label for="userID">Enter your user ID:</label>
+        <input type="text" id="userID" placeholder="Your ID">
+        <button type="button" class="btn btn-info mt-3" id="loadMyRecipeBtn" data-toggle="modal" data-target="#viewMyRecipe">
+            View MyRecipe
         </button>
           <!-- <button type="button" class="btn btn-info mt-3" id="loadFavoriteBtn" data-toggle="modal" data-target="#viewFavoriteModal">
             View Favorite
@@ -93,6 +100,7 @@
                   <th scope="col">Ingredients</th>
                   <th scope="col">Directions</th>
                   <th scope="col">Actions</th>
+                  
                 </tr>
               </thead>
               <tbody id="recipeBody">
@@ -105,38 +113,54 @@
     </div>
   </div>
 
+    <div class="modal fade" id="viewMyRecipe" tabindex="-1" role="dialog" aria-labelledby="viewMyRecipeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="viewMyRecipeModalLabel">My Recipes</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            </div>
+            <div class="modal-body">
+                <h2>Add Your Own Recipe</h2>
 
-  <div class="modal fade" id="viewFoodModal" tabindex="-1" role="dialog" aria-labelledby="viewFoodModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="viewFoodModalLabel">Attendance Records</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
+                <form id="recipeForm">
+                  <div>
+                    <label for="recipeTitle">Recipe Title:</label>
+                    <input type="text" id="recipeTitle" name="recipeTitle" placeholder="Enter recipe title">
+                  </div>
+                  <div>
+                    <label for="ingredients">Ingredients:</label>
+                    <input type="text" id="ingredients" name="ingredients" placeholder="Enter ingredients">
+                  </div>
+                  <div>
+                    <label for="directions">Directions:</label>
+                    <input type="text" id="directions" name="directions" placeholder="Enter directions">
+                  </div>
+                  <button type="button" onclick="submitRecipe()">Submit Recipe</button>
+                </form>
+            <br><br>
+            <h2>Your Recipes</h2>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Recipe Title</th>
+                    <th scope="col">Ingredients</th>
+                    <th scope="col">Directions</th>
+                    <th scope="col">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="myRecipeBody">
+                <!-- Attendance rows will be inserted here -->
+                </tbody>
+            </table>
+            </div>
         </div>
-        <div class="modal-body">
-          <table class="table">
-            <thead>
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Food Name</th>
-                <th scope="col">Fat</th>
-                <th scope="col">Protein</th>
-                <th scope="col">Carbs</th>
-                <th scope="col">Measures</th>
-                <th scope="col">Category</th>
-                <th scope="col">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="foodBody">
-              <!-- Attendance rows will be inserted here -->
-            </tbody>
-          </table>
         </div>
-      </div>
     </div>
-  </div>
+    </div>
 
   <div class="modal fade" id="viewRankingModal" tabindex="-1" role="dialog" aria-labelledby="viewRankingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
@@ -253,6 +277,34 @@
   });
 
   $(document).ready(function() {
+    $('#loadMyRecipeBtn').click(function() {
+      $.ajax({
+        url: '/api/MyRecipe',
+        method: 'GET',
+        success: function(data) {
+          var rows = '';
+          data.forEach(function(MyRecipe, index) {
+            rows += `<tr>
+                       <th scope="row">${index + 1}</th>
+                       <td>${MyRecipe.RecipeTitle}</td>
+                       <td>${MyRecipe.Ingredients}</td>
+                       <td>${MyRecipe.Directions}</td>
+                       <td>
+                         <button class="btn btn-warning btn-sm" data-netid="${MyRecipe.Ingredients}">Modify</button>
+                         <button class="btn btn-danger btn-sm" data-netid="${MyRecipe.Ingredients}">Delete</button>
+                       </td>
+                     </tr>`;
+          });
+          $('#myRecipeBody').html(rows);
+        },
+        error: function() {
+          alert('Failed to load attendance data.');
+        }
+      });
+    });
+  });
+
+  $(document).ready(function() {
     $('#loadFiltered').click(function() {
       $.ajax({
         url: '/api/Filtered',
@@ -265,10 +317,10 @@
                        <td>${Recipe.RecipeTitle}</td>
                        <td>${Recipe.Ingredients}</td>
                        <td>${Recipe.Directions}</td>
-                    //    <td>
-                    //      <button class="btn btn-warning btn-sm" data-netid="${Recipe.Ingredients}">Modify</button>
-                    //      <button class="btn btn-danger btn-sm" data-netid="${Recipe.Ingredients}">Delete</button>
-                    //    </td>
+                       <td>
+                         <button class="btn btn-warning btn-sm" data-netid="${Recipe.Ingredients}">Modify</button>
+                         <button class="btn btn-danger btn-sm" data-netid="${Recipe.Ingredients}">Delete</button>
+                       </td>
                      </tr>`;
           });
           $('#recipeBody').html(rows);

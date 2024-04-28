@@ -118,6 +118,22 @@ app.get('/api/Filtered', function(req, res) {
     });
 });
 
+app.get('/api/MyRecipe', function(req, res) {
+    var sql = `
+        SELECT r.RecipeTitle, r.Ingredients, r.Directions
+        FROM MyRecipe r
+        WHERE r.UserID = 'a00001'    
+    `;
+    
+    connection.query(sql, function(err, results) {
+        if (err) {
+            console.error('Error fetching attendance data:', err);
+            res.status(500).send({ message: 'Error fetching attendance data', error: err });
+            return;
+        }
+        res.json(results);
+    });
+});
 
 // Query for loading the recipes by favorite ranking
 
