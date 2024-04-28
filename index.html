@@ -123,6 +123,7 @@
             </button>
             </div>
             <div class="modal-body">
+                <h2>UserID: </h2>
                 <h2>Add Your Own Recipe</h2>
 
                 <form id="recipeForm">
@@ -279,19 +280,19 @@
   $(document).ready(function() {
     $('#loadMyRecipeBtn').click(function() {
       $.ajax({
-        url: '/api/MyRecipe',
+        url: '/api/MyRecipes',
         method: 'GET',
         success: function(data) {
           var rows = '';
-          data.forEach(function(MyRecipe, index) {
+          data.forEach(function(MyRecipes, index) {
             rows += `<tr>
                        <th scope="row">${index + 1}</th>
-                       <td>${MyRecipe.RecipeTitle}</td>
-                       <td>${MyRecipe.Ingredients}</td>
-                       <td>${MyRecipe.Directions}</td>
+                       <td>${MyRecipes.RecipeTitle}</td>
+                       <td>${MyRecipes.Ingredients}</td>
+                       <td>${MyRecipes.Directions}</td>
                        <td>
-                         <button class="btn btn-warning btn-sm" data-netid="${MyRecipe.Ingredients}">Modify</button>
-                         <button class="btn btn-danger btn-sm" data-netid="${MyRecipe.Ingredients}">Delete</button>
+                         <button class="btn btn-warning btn-sm" data-netid="${MyRecipes.Ingredients}">Modify</button>
+                         <button class="btn btn-danger btn-sm" data-netid="${MyRecipes.Ingredients}">Delete</button>
                        </td>
                      </tr>`;
           });
