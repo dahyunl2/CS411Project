@@ -78,40 +78,93 @@ app.get('/api/Favorites', function(req, res) {
     });
 });
 
-app.get('/api/MyRecipes', function(req, res) {
-    var sql = 'SELECT * FROM MyRecipes';
+// app.get('/api/MyRecipes', function(req, res) {
+//     var sql = 'SELECT * FROM MyRecipes';
     
-    connection.query(sql, function(err, results) {
-        if (err) {
-            console.error('Error fetching attendance data:', err);
-            res.status(500).send({ message: 'Error fetching attendance data', error: err });
-            return;
-        }
-        res.json(results);
-    });
-});
+//     connection.query(sql, function(err, results) {
+//         if (err) {
+//             console.error('Error fetching attendance data:', err);
+//             res.status(500).send({ message: 'Error fetching attendance data', error: err });
+//             return;
+//         }
+//         res.json(results);
+//     });
+// });
+
+// app.get('/api/Filtered', function(req, res) {
+//     var sql = `
+//         (
+//         SELECT r.RecipeTitle, r.Ingredients, r.Directions
+//         FROM Recipe r
+//         JOIN Food f ON r.Ingredients LIKE CONCAT('%', f.FoodName, '%') 
+//         WHERE f.Category = 'Dairy products'
+//         )
+//         INTERSECT
+//         (
+//         SELECT r.RecipeTitle, r.Ingredients, r.Directions
+//         FROM Recipe r
+//         JOIN Food f ON r.Ingredients LIKE CONCAT('%', f.FoodName, '%') 
+//         WHERE f.Category LIKE '%Seafood'
+//         ) LIMIT 15;        
+//     `;
+    
+//     connection.query(sql, function(err, results) {
+//         if (err) {
+//             console.error('Error fetching attendance data:', err);
+//             res.status(500).send({ message: 'Error fetching attendance data', error: err });
+//             return;
+//         }
+//         res.json(results);
+//     });
+// });
 
 app.get('/api/Filtered', function(req, res) {
-    var sql = `
-        (
-        SELECT r.RecipeTitle, r.Ingredients, r.Directions
-        FROM Recipe r
-        JOIN Food f ON r.Ingredients LIKE CONCAT('%', f.FoodName, '%') 
-        WHERE f.Category = 'Dairy products'
-        )
-        INTERSECT
-        (
-        SELECT r.RecipeTitle, r.Ingredients, r.Directions
-        FROM Recipe r
-        JOIN Food f ON r.Ingredients LIKE CONCAT('%', f.FoodName, '%') 
-        WHERE f.Category LIKE '%Seafood'
-        ) LIMIT 15;        
-    `;
+    // Parameters passed from the client
+    var ingredient = req.query.ingredient;
+    var category = req.query.category;
+    var nutrition = req.query.nutrition;
+    var greaterThan = req.query.greaterThan;
+    var lessThan = req.query.lessThan;
+
+    // Start SQL query construction
+    var sql = 'SELECT DISTINCT Recipe.RecipeTitle, Recipe.Ingredients, Recipe.Directions FROM Recipe ';
+    var conditions = [];
     
+    // Add conditions based on the inputs
+    // if (ingredients) query.ingredients = ingredients;
+    // if (categories) query.categories = categories;
+    // if (nutrition && (greaterThan || lessThan)) {
+    //     query.nutrition = nutrition;
+    //     query.greaterThan = greaterThan;
+    //     query.lessThan = lessThan;
+    // }
+    if (ingredient) {
+        conditions.push(`Recipe.Ingredients LIKE '%${ingredient}%'`);
+    }
+    if (category) {
+        sql += 'JOIN Food ON Recipe.Ingredients LIKE CONCAT("%", Food.FoodName, "%") ';
+        conditions.push(`Food.Category = '${category}'`);
+    }
+    if (nutrition && (greaterThan || lessThan)) {
+        sql += 'JOIN Nutrition ON Recipe.RecipeID = Nutrition.RecipeID ';
+        if (greaterThan) {
+            conditions.push(`Nutrition.${nutrition} > ${greaterThan}`);
+        }
+        if (lessThan) {
+            conditions.push(`Nutrition.${nutrition} < ${lessThan}`);
+        }
+    }
+    
+    // If there are any conditions, append them to the query
+    if (conditions.length) {
+        sql += 'WHERE ' + conditions.join(' AND ');
+    }
+
+    // Execute the query
     connection.query(sql, function(err, results) {
         if (err) {
-            console.error('Error fetching attendance data:', err);
-            res.status(500).send({ message: 'Error fetching attendance data', error: err });
+            console.error('Error fetching filtered data:', err);
+            res.status(500).send({ message: 'Error fetching filtered data', error: err });
             return;
         }
         res.json(results);
@@ -119,22 +172,17 @@ app.get('/api/Filtered', function(req, res) {
 });
 
 app.get('/api/MyRecipes', function(req, res) {
-    var userID = req.params.userID;
-    if (userID==""){
-        var sql = `
-        SELECT r.RecipeTitle, r.Ingredients, r.Directions
-        FROM MyRecipes r`;
-    }
-    else{
-        var sql = `
-        SELECT r.RecipeTitle, r.Ingredients, r.Directions
-        FROM MyRecipes r
-        WHERE r.UserID = ${userID}   
-    `;
+    // var userID = req.params.userID;
+    var userID = req.query.userID; // Changed from req.params to req.query.
+    console.log("userID:",userID);
+    var sql;
+    if (userID) {
+        sql = `SELECT RecipeTitle, Ingredients, Directions FROM MyRecipes WHERE UserID = ?`;
+    } else {
+        sql = `SELECT RecipeTitle, Ingredients, Directions FROM MyRecipes`;
     }
     
-    
-    connection.query(sql, function(err, results) {
+    connection.query(sql,[userID],function(err, results) {
         if (err) {
             console.error('Error fetching attendance data:', err);
             res.status(500).send({ message: 'Error fetching attendance data', error: err });

@@ -189,6 +189,7 @@
       </div>
     </div>
   </div>
+  
   <div class="modal fade" id="viewUserRankingModal" tabindex="-1" role="dialog" aria-labelledby="viewUserRankingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
@@ -279,9 +280,12 @@
 
   $(document).ready(function() {
     $('#loadMyRecipeBtn').click(function() {
+      var userID = $('#userID').val(); // Ensure this is correctly capturing the input value.
+      console.log("Sending userID:", userID); // Check what's being sent.
       $.ajax({
         url: '/api/MyRecipes',
         method: 'GET',
+        data: { userID: userID },
         success: function(data) {
           var rows = '';
           data.forEach(function(MyRecipes, index) {
@@ -305,34 +309,77 @@
     });
   });
 
-  $(document).ready(function() {
-    $('#loadFiltered').click(function() {
-      $.ajax({
-        url: '/api/Filtered',
-        method: 'GET',
-        success: function(data) {
-          var rows = '';
-          data.forEach(function(Recipe, index) {
-            rows += `<tr>
-                       <th scope="row">${index + 1}</th>
-                       <td>${Recipe.RecipeTitle}</td>
-                       <td>${Recipe.Ingredients}</td>
-                       <td>${Recipe.Directions}</td>
-                       <td>
-                         <button class="btn btn-warning btn-sm" data-netid="${Recipe.Ingredients}">Modify</button>
-                         <button class="btn btn-danger btn-sm" data-netid="${Recipe.Ingredients}">Delete</button>
-                       </td>
-                     </tr>`;
-          });
-          $('#recipeBody').html(rows);
-        },
-        error: function() {
-          alert('Failed to load attendance data.');
-        }
-      });
-    });
-  });
+  // $(document).ready(function() {
+  //   $('#loadFiltered').click(function() {
+  //     $.ajax({
+  //       url: '/api/Filtered',
+  //       method: 'GET',
+  //       success: function(data) {
+  //         var rows = '';
+  //         data.forEach(function(Recipe, index) {
+  //           rows += `<tr>
+  //                      <th scope="row">${index + 1}</th>
+  //                      <td>${Recipe.RecipeTitle}</td>
+  //                      <td>${Recipe.Ingredients}</td>
+  //                      <td>${Recipe.Directions}</td>
+  //                      <td>
+  //                        <button class="btn btn-warning btn-sm" data-netid="${Recipe.Ingredients}">Modify</button>
+  //                        <button class="btn btn-danger btn-sm" data-netid="${Recipe.Ingredients}">Delete</button>
+  //                      </td>
+  //                    </tr>`;
+  //         });
+  //         $('#recipeBody').html(rows);
+  //       },
+  //       error: function() {
+  //         alert('Failed to load attendance data.');
+  //       }
+  //     });
+  //   });
+  // });
+$(document).ready(function() {
+  $('#loadFiltered').click(function() {
+      var ingredients = $('#ingredients').val();
+      var categories = $('#categories').val();
+      var nutrition = $('#nutrition').val();
+      var greaterThan = $('#getGreaterThan').val();
+      var lessThan = $('#getLessThan').val();
 
+      // Build the query
+      var query = {};
+      // if (ingredients) query.ingredients = ingredients;
+      // if (categories) query.categories = categories;
+      // if (nutrition && (greaterThan || lessThan)) {
+      //     query.nutrition = nutrition;
+      //     query.greaterThan = greaterThan;
+      //     query.lessThan = lessThan;
+      // }
+
+      $.ajax({
+          url: '/api/Filtered',
+          method: 'GET',
+          data: { ingredients: ingredients, categories: categories, nutrition: nutrition, greaterThan: greaterThan, lessThan: lessThan},
+          success: function(data) {
+              var rows = '';
+              data.forEach(function(Recipe, index) {
+                  rows += `<tr>
+                              <th scope="row">${index + 1}</th>
+                              <td>${Recipe.RecipeTitle}</td>
+                              <td>${Recipe.Ingredients}</td>
+                              <td>${Recipe.Directions}</td>
+                              <td>
+                                <button class="btn btn-warning btn-sm" data-netid="${Recipe.Ingredients}">Modify</button>
+                                <button class="btn btn-danger btn-sm" data-netid="${Recipe.Ingredients}">Delete</button>
+                              </td>
+                            </tr>`;
+              });
+              $('#recipeBody').html(rows);
+          },
+          error: function() {
+              alert('Failed to load filtered data.');
+          }
+      });
+  });
+});
   $(document).ready(function() {
     $('#loadFoodBtn').click(function() {
       $.ajax({
@@ -376,6 +423,29 @@
                        <th scope="row">${index + 1}</th>
                        <td>${Food.RecipeTitle}</td>
                        <td>${Food.FavoriteCount}</td>
+                     </tr>`;
+          });
+          $('#rankBody').html(rows);
+        },
+        error: function() {
+          alert('Failed to load attendance data.');
+        }
+      });
+    });
+  });
+
+  $(document).ready(function() {
+    $('#loadUserRankingBtn').click(function() {
+      $.ajax({
+        url: '/api/Users_Ranking',
+        method: 'GET',
+        success: function(data) {
+          var rows = '';
+          data.forEach(function(Users_Ranking, index) {
+            rows += `<tr>
+                       <th scope="row">${index + 1}</th>
+                       <td>${Users_Ranking.UserName}</td>
+                       <td>${Users_Ranking.RecipesUploaded}</td>
                      </tr>`;
           });
           $('#rankBody').html(rows);
