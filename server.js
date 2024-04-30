@@ -105,20 +105,23 @@ app.get('/', function(req, res) {
 // });
 
 // // this code is executed when a user clicks the form submit button
-// app.post('/mark', function(req, res) {
-// var netid = req.body.netid;
+app.post('/api/MyRecipe/insert/', function(req, res) {
+    var userID = req.params.userID;
+    var newRecipeTitle=req.params.newRecipeTitle;
+    var newIngredients=req.params.newIngredients;
+    var newDirections=req.params.newDirections;
 
-// var sql = `INSERT INTO Recipe (RecipeTitle) VALUES ('${netid}')`;
-
-// console.log(sql);
-// connection.query(sql, function(err, result) {
-// if (err) {
-//     res.send(err)
-//     return;
-// }
-// res.redirect('/success');
-// });
-// });
+    var sql = `INSERT INTO MyRecipes (UserID, RecipeTitle, Ingredients, Directions)
+    VALUES (?, ?, ?, ?);`;
+    
+    connection.query(sql, [UserID, RecipeTitle, Ingredients, Directions],function(err, result) {
+        if (err) {
+            res.send(err)
+            return;
+        }
+        res.redirect('/success');
+    });
+});
 
 // app.get('/api/attendance', function(req, res) {
 // var sql = 'SELECT * FROM attendance';

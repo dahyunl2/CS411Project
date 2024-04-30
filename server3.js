@@ -248,6 +248,49 @@ app.get('/api/Users_Ranking', function(req, res) {
     });
 });
 
+app.post('/api/MyRecipes/insert/:userID', function(req, res) {
+    var userID = req.params.userID;
+    var newRecipeTitle=req.params.newRecipeTitle;
+    var newIngredients=req.params.newIngredients;
+    var newDirections=req.params.newDirections;
+
+    if (!userID) {
+        res.status(400).send({ message: 'User ID is required to insert a new recipe' });
+        return;
+    }
+
+    var sql = `INSERT INTO MyRecipes (UserID, RecipeTitle, Ingredients, Directions)
+    VALUES (?, ?, ?, ?);`;
+    
+    connection.query(sql, [UserID, RecipeTitle, Ingredients, Directions],function(err, result) {
+        if (err) {
+            res.send(err)
+            return;
+        }
+        res.redirect('/success');
+    });
+});
+
+app.delete('/api/MyRecipes/delete/:userID', function(req, res) {
+    var userID = req.params.userID;
+    var recipeTitleChosen=req.params.recipeTitleChosen;
+    var sql = 'DELETE FROM MyRecipes WHERE UserID = ? and RecipeTitle = ?';
+
+    connection.query(sql, [userID, recipeTitleChosen], function(err, result) {
+        if (err) {
+        console.error('Error deleting recipe record:', err);
+        res.status(500).send({ message: 'Error deleting recipe record', error: err });
+        return;
+        }
+        if(result.affectedRows === 0) {
+        // No rows were affected, meaning no record was found with that ID
+        res.status(404).send({ message: 'Record not found' });
+        } else {
+        res.send({ message: 'Recipe record deleted successfully' });
+        }
+    });
+});
+
 app.get('', function(req, res) {
     res.render('index', { title: 'CS411 Project' });
 });
