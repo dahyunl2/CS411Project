@@ -236,8 +236,8 @@ app.post('/api/User/passwordChange/:userID', function(req, res) {
     
 });
 
-app.post('/api/MyRecipes/transact/:userID', function(req, res) {
-    var userID = req.params.userID;
+app.get('/api/MyRecipes/transact/:userID', function(req, res) {
+    var userID = req.query.userID;
 
     console.log('userIDchange:',userID);
  
@@ -249,36 +249,38 @@ app.post('/api/MyRecipes/transact/:userID', function(req, res) {
         //add JOIN + GroupBY
     var sql = 
     //BEGIN;
-    `START TRANSACTION;
-    IF NOT EXISTS (SELECT UserID FROM User WHERE UserName = 'username') THEN
-        INSERT INTO User (UserID, UserName)
-        VALUES('00000', 'username1');
-    END IF;
+    `SELECT r.RecipeTitle, r.Ingredients, r.Directions
+    FROM Recipe r 
+    JOIN Food f ON r.Ingredients LIKE CONCAT('%', f.FoodName, '%') 
+    WHERE f.Category IN (
+        SELECT Category
+        FROM Food
+        GROUP BY Category
+        HAVING AVG(Protein) > 15
+    ) LIMIT 15;
     
-    UPDATE User
-    SET UserName = 'newusername'
-    WHERE UserName = 'username';
-
-    SELECT u.UserName, COUNT(r.RecipeID) AS RecipeCount
-    FROM User u
-    LEFT JOIN Recipe r ON u.UserID = r.UserID
-    WHERE u.UserName = 'username'
-    GROUP BY u.UserName;
-
-    COMMIT;`;    
+    (
+    SELECT r.RecipeTitle, r.Ingredients, r.Directions
+    FROM Recipe r
+    JOIN Food f ON r.Ingredients LIKE CONCAT('%', f.FoodName, '%') 
+    WHERE f.Category = 'Dairy Products'
+    )
+    INTERSECT
+    (
+    SELECT r.RecipeTitle, r.Ingredients, r.Directions
+    FROM Recipe r
+    JOIN Food f ON r.Ingredients LIKE CONCAT('%', f.FoodName, '%') 
+    WHERE f.Category LIKE '%Seafood'
+    ) LIMIT 15;`;    
     
     connection.query(sql, [userID], function(err, result) {
         if (err) {
-          console.error('Error with user id:', err);
-          res.status(500).send({ message: 'Error with user id', error: err });
-          return;
+            console.error('Error fetching user data:', err);
+            res.status(500).send({ message: 'Error fetching user data', error: err });
+            return;
         }
-        if(result.affectedRows === 0) {
-          res.status(404).send({ message: 'Record not found' });
-        } else {
-          res.send({ message: 'username changed successfully' });
-        }
-      });
+        res.json(results);
+    });
 });
 
 
