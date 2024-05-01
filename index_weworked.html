@@ -382,7 +382,7 @@
                        <td>${MyRecipes.Ingredients}</td>
                        <td>${MyRecipes.Directions}</td>
                        <td>
-                        <button class="btn btn-danger btn-sm" data-userID="${userID}" data-recipeTitleDelete="${MyRecipes.RecipeTitle}">Delete</button>
+                        <button class="btn btn-delete btn-sm" data-userID="${userID}" data-recipeTitleDelete="${MyRecipes.RecipeTitle}">Delete</button>
                         
                         </td>
                      </tr>`;
@@ -554,7 +554,7 @@ $(document).ready(function() {
 //         });
 //     });
 
-    $(document).on('click', '.btn-danger', function() {
+    $(document).on('click', '.btn-delete', function() {
         var userID =  $('#userID').val();
         var recipeTitleDelete = $(this).data('recipeTitleDelete');
         if(confirm('Are you sure you want to delete this recipe for userID: ' + userID + '?')) {
@@ -624,6 +624,8 @@ $(document).ready(function() {
   //       }
   //   });
   // });
+
+  
 
   </script>
 </body>
