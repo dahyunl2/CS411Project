@@ -128,48 +128,47 @@ app.get('/api/Filtered', function(req, res) {
    
     // Start SQL query construction
     var sql = 'SELECT DISTINCT Recipe.RecipeTitle, Recipe.Ingredients, Recipe.Directions FROM Recipe ';
-
+    sql += 'JOIN Food ON Recipe.Ingredients LIKE CONCAT("%", Food.FoodName, "%") '; // added
 
     var conditions = [];
-    
 
-    console.log("Ingredient", ingredient);
-    console.log("Cateogry", category);
+    console.log("Ingredient:", ingredient);
+    console.log("Category:", category);
     
+    if (ingredient) {
+        conditions.push(`Recipe.Ingredients LIKE '%${ingredient}%'`);
+    }
+    if (category) {
+        // sql += 'JOIN Food ON Recipe.Ingredients LIKE CONCAT("%", Food.FoodName, "%") '; // edited
+        conditions.push(`Food.Category = '${category}'`);
+    }
+    if (nutrition && (greaterThan || lessThan)) {
+        // sql += 'JOIN Food ON Recipe.RecipeID = Food.RecipeID '; // edited
+        if (greaterThan) {
+            conditions.push(`Food.${nutrition} > ${greaterThan}`);
+        }
+        if (lessThan) {
+            conditions.push(`Food.${nutrition} < ${lessThan}`);
+        }
+    }
+
+
     // if (ingredient) {
-    //     conditions.push(`Recipe.Ingredients LIKE '%${ingredient}%'`);
+    //     conditions.push(`Recipe.Ingredients LIKE ?`);
     // }
     // if (category) {
     //     sql += 'JOIN Food ON Recipe.Ingredients LIKE CONCAT("%", Food.FoodName, "%") ';
-    //     conditions.push(`Food.Category = '${category}'`);
+    //     conditions.push(`Food.Category = ?`);
     // }
     // if (nutrition && (greaterThan || lessThan)) {
     //     sql += 'JOIN Nutrition ON Recipe.RecipeID = Nutrition.RecipeID ';
     //     if (greaterThan) {
-    //         conditions.push(`Nutrition.${nutrition} > ${greaterThan}`);
+    //         conditions.push(`Nutrition.? > ?`);
     //     }
     //     if (lessThan) {
-    //         conditions.push(`Nutrition.${nutrition} < ${lessThan}`);
+    //         conditions.push(`Nutrition.? < ?`);
     //     }
     // }
-
-
-    if (ingredient) {
-        conditions.push(`Recipe.Ingredients LIKE ?`);
-    }
-    if (category) {
-        sql += 'JOIN Food ON Recipe.Ingredients LIKE CONCAT("%", Food.FoodName, "%") ';
-        conditions.push(`Food.Category = '${category}'`);
-    }
-    if (nutrition && (greaterThan || lessThan)) {
-        sql += 'JOIN Nutrition ON Recipe.RecipeID = Nutrition.RecipeID ';
-        if (greaterThan) {
-            conditions.push(`Nutrition.? > ?`);
-        }
-        if (lessThan) {
-            conditions.push(`Nutrition.? < ?`);
-        }
-    }
     
     // If there are any conditions, append them to the query
     if (conditions.length) {
@@ -296,25 +295,46 @@ app.post('/api/MyRecipes/insert/:userID', function(req, res) {
     });
 });
 
-app.delete('/api/MyRecipes/delete/:userID', function(req, res) {
+// app.delete('/api/MyRecipes/delete/:userID', function(req, res) {
+//     var userID = req.params.userID;
+//     var recipeTitleDelete=req.params.recipeTitleDelete;
+//     var sql = 'DELETE FROM MyRecipes WHERE UserID = ? and RecipeTitle = ?';
+
+//     connection.query(sql, [userID, recipeTitleDelete], function(err, result) {
+//         if (err) {
+//         console.error('Error deleting recipe record:', err);
+//         res.status(500).send({ message: 'Error deleting recipe record', error: err });
+//         return;
+//         }
+//         if (result.affectedRows === 0) {
+//         // No rows were affected, meaning no record was found with that ID
+//         res.status(404).send({ message: 'Record not found' });
+//         } else {
+//         res.send({ message: 'Recipe record deleted successfully' });
+//         }
+//     });
+// });
+
+app.delete('/api/MyRecipes/delete/:userID/:recipeTitleChosen', function(req, res) {
     var userID = req.params.userID;
-    var recipeTitleChosen=req.params.recipeTitleChosen;
+    var recipeTitleChosen = req.params.recipeTitleChosen;
     var sql = 'DELETE FROM MyRecipes WHERE UserID = ? and RecipeTitle = ?';
 
     connection.query(sql, [userID, recipeTitleChosen], function(err, result) {
         if (err) {
-        console.error('Error deleting recipe record:', err);
-        res.status(500).send({ message: 'Error deleting recipe record', error: err });
-        return;
+            console.error('Error deleting recipe record:', err);
+            res.status(500).send({ message: 'Error deleting recipe record', error: err });
+            return;
         }
-        if(result.affectedRows === 0) {
-        // No rows were affected, meaning no record was found with that ID
-        res.status(404).send({ message: 'Record not found' });
+        if (result.affectedRows === 0) {
+            // No rows were affected, meaning no record was found with that ID
+            res.status(404).send({ message: 'Record not found' });
         } else {
-        res.send({ message: 'Recipe record deleted successfully' });
+            res.send({ message: 'Recipe record deleted successfully' });
         }
     });
 });
+
 
 app.get('', function(req, res) {
     res.render('index', { title: 'CS411 Project' });
