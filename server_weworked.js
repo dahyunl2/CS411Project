@@ -196,25 +196,29 @@ app.post('/api/User/passwordChange/:userID', function(req, res) {
         res.status(400).send({ message: 'User ID is required to modify the password' });
         return;
     }
+    
+    // trigger automatically check 
+    // stored procedure -- call it
 
     var sql = `UPDATE User SET Password = ? WHERE UserID = ?`;
-    var sql_trigger =
-    `CREATE TRIGGER UserName
-    BEFORE INSER ON User
-    FOR EACH ROW
-    BEGIN
-        IF NEW.Password IS NULL THEN
-            SET NEW.Password = old.Password;
-        END IF;
-    END;`
+    // var sql_trigger =
+    // `CREATE TRIGGER UserName
+    // BEFORE INSERT ON User
+    // FOR EACH ROW
+    // BEGIN
+    //     IF NEW.Password IS NOT NULL THEN
+    //         UPDATE SET NEW.Password = old.Password
+    //         WHERE UserID = ?;
+    //     END IF;
+    // END;`
 
-    connection.execute(sql_trigger, function(err) {
-            if (err) {
-                console.error('Error creating trigger:', err);
-                return;
-            }
-            console.log('Trigger created successfully');
-        });
+    // connection.execute(sql_trigger, function(err) {
+    //         if (err) {
+    //             console.error('Error creating trigger:', err);
+    //             return;
+    //         }
+    //         console.log('Trigger created successfully');
+    //     });
     
     connection.query(sql, [newPassword, userID], function(err, result) {
         if (err) {
@@ -232,7 +236,128 @@ app.post('/api/User/passwordChange/:userID', function(req, res) {
     
 });
 
-// Query for loading the recipes by favorite ranking
+app.post('/api/MyRecipes/transact/:userID', function(req, res) {
+    var userID = req.params.userID;
+
+    console.log('userIDchange:',userID);
+ 
+    if (!userID) {
+        res.status(400).send({ message: 'User ID is invalid' });
+        return;
+    }
+
+        //add JOIN + GroupBY
+    var sql = 
+    //BEGIN;
+    `START TRANSACTION;
+    IF NOT EXISTS (SELECT UserID FROM User WHERE UserName = 'username') THEN
+        INSERT INTO User (UserID, UserName)
+        VALUES('00000', 'username1');
+    END IF;
+    
+    UPDATE User
+    SET UserName = 'newusername'
+    WHERE UserName = 'username';
+
+    SELECT u.UserName, COUNT(r.RecipeID) AS RecipeCount
+    FROM User u
+    LEFT JOIN Recipe r ON u.UserID = r.UserID
+    WHERE u.UserName = 'username'
+    GROUP BY u.UserName;
+
+    COMMIT;`;    
+    
+    connection.query(sql, [userID], function(err, result) {
+        if (err) {
+          console.error('Error with user id:', err);
+          res.status(500).send({ message: 'Error with user id', error: err });
+          return;
+        }
+        if(result.affectedRows === 0) {
+          res.status(404).send({ message: 'Record not found' });
+        } else {
+          res.send({ message: 'username changed successfully' });
+        }
+      });
+});
+
+
+app.get('/api/getNumRecipes', (req, res) => {
+    const ingredient = req.query.ing;
+    const category = req.query.cat;
+    const nutrition = req.query.nutr;
+    const greaterThan = req.query.gt;
+    const lessThan = req.query.lt;
+
+    const sql = `
+    CREATE PROCEDURE GetNumRecipes(
+        IN ing VARCHAR(250),
+        IN cat VARCHAR(250),
+        IN nutr VARCHAR(250),
+        IN gt INT,
+        IN lt INT
+    )
+    BEGIN
+        SELECT COUNT(*) AS numRecipes
+        FROM Recipe r
+        WHERE r.Ingredients LIKE CONCAT('%', ing, '%') AND r.Category LIKE CONCAT('%', cat, '%') AND r.Nutrition > gt AND r.Nutrition < lt;
+    END`;
+
+    db.query(sql, (error, result) => {
+        if (error) {
+            console.error(error);
+            res.send([]);
+        } else {
+            const sqlCallStoredProcedure = "CALL GetNumRecipes(?, ?, ?, ?, ?)";
+            db.query(sqlCallStoredProcedure, [ingredient, category, nutrition, greaterThan, lessThan], (error, result) => {
+                if (error) {
+                    console.error(error);
+                    res.send([]);
+                } else {
+                    res.send(result[0]);
+                }
+            });
+        }
+    });
+});
+
+
+// app.get('/api/getNumRecipes', (req, res) => {
+//     const recipe = require.query.Recipe; 
+//     console.log(recipe);
+    // var sql = `
+    // DELIMITER //
+
+    // CREATE PROCEDURE GetNumRecipes
+    //     @ing VARCHAR(250),
+    //     @cat VARCHAR(250),
+    //     @nutr VARCHAR(250),
+    //     @gt INT(100),
+    //     @lt INT(100)
+
+    // AS
+    // BEGIN
+    //     SELECT COUNT(*) INTO numRecipes
+    //     FROM Recipe r
+    //     WHERE r.Ingredients = @ing AND r.Category LIKE @cat AND r.Nutrition > @gt AND r.@Nutrition < @lt
+    // SELECT numRecipes;
+
+    // END //
+    // DELIMITER ;
+
+    // `
+//     const sqlCallStoredProcedure = "CALL GetNumRecipes(?)";
+  
+//     db.query(sql, sqlCallStoredProcedure, [recipe], (error, result) => {
+//         if (error) {
+//             console.error(error);
+//             response.send([]);
+//         } else {
+//             response.send(result[0]);
+//         }
+//     });
+//   })
+// // Query for loading the recipes by favorite ranking
 
 app.get('/api/Fav_Ranking', function(req, res) {
     var sql = `
@@ -326,7 +451,7 @@ app.post('/api/MyRecipes/insert/:userID', function(req, res) {
 
 app.delete('/api/MyRecipes/delete/:userID', function(req, res) {
     var userID = req.params.userID;
-    var recipeTitleDelete = req.query.recipeTitleDelete;
+    var recipeTitleDelete = req.body.recipeTitleDelete;
     console.log('userIDdelete:',userID);
     console.log('recipeTitleDelete:',recipeTitleDelete);
     
