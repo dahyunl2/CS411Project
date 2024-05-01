@@ -52,19 +52,6 @@ app.get('/api/Food', function(req, res) {
     });
 });
 
-app.get('/api/User', function(req, res) {
-    var sql = 'SELECT * FROM User';
-    
-    connection.query(sql, function(err, results) {
-        if (err) {
-            console.error('Error fetching attendance data:', err);
-            res.status(500).send({ message: 'Error fetching attendance data', error: err });
-            return;
-        }
-        res.json(results);
-    });
-});
-
 app.get('/api/Favorites', function(req, res) {
     var sql = 'SELECT * FROM Favorites';
     
@@ -77,46 +64,6 @@ app.get('/api/Favorites', function(req, res) {
         res.json(results);
     });
 });
-
-// app.get('/api/MyRecipes', function(req, res) {
-//     var sql = 'SELECT * FROM MyRecipes';
-    
-//     connection.query(sql, function(err, results) {
-//         if (err) {
-//             console.error('Error fetching attendance data:', err);
-//             res.status(500).send({ message: 'Error fetching attendance data', error: err });
-//             return;
-//         }
-//         res.json(results);
-//     });
-// });
-
-// app.get('/api/Filtered', function(req, res) {
-//     var sql = `
-//         (
-//         SELECT r.RecipeTitle, r.Ingredients, r.Directions
-//         FROM Recipe r
-//         JOIN Food f ON r.Ingredients LIKE CONCAT('%', f.FoodName, '%') 
-//         WHERE f.Category = 'Dairy products'
-//         )
-//         INTERSECT
-//         (
-//         SELECT r.RecipeTitle, r.Ingredients, r.Directions
-//         FROM Recipe r
-//         JOIN Food f ON r.Ingredients LIKE CONCAT('%', f.FoodName, '%') 
-//         WHERE f.Category LIKE '%Seafood'
-//         ) LIMIT 15;        
-//     `;
-    
-//     connection.query(sql, function(err, results) {
-//         if (err) {
-//             console.error('Error fetching attendance data:', err);
-//             res.status(500).send({ message: 'Error fetching attendance data', error: err });
-//             return;
-//         }
-//         res.json(results);
-//     });
-// });
 
 app.get('/api/Filtered', function(req, res) {
     // Parameters passed from the client
@@ -216,6 +163,75 @@ app.get('/api/MyRecipes', function(req, res) {
     });
 });
 
+app.get('/api/User', function(req, res) {
+    var userID = req.query.userID; 
+    console.log("userIDinfo:",userID);
+    var sql;
+    if (userID) {
+        sql = `SELECT UserID, UserName, Password FROM User WHERE UserID = ?`;
+    } else {
+        console.error('Please enter your UserID');
+    }
+    
+    connection.query(sql,[userID],function(err, results) {
+        if (err) {
+            console.error('Error fetching user data:', err);
+            res.status(500).send({ message: 'Error fetching user data', error: err });
+            return;
+        }
+        res.json(results);
+    });
+});
+
+
+app.post('/api/User/passwordChange/:userID', function(req, res) {
+    var userID = req.params.userID;
+    var newPassword=req.body.newPassword;
+   
+    
+    console.log('userIDInsert:',userID);
+    console.log('newPassword:',newPassword);
+   
+    if (!userID) {
+        res.status(400).send({ message: 'User ID is required to modify the password' });
+        return;
+    }
+
+    var sql = `UPDATE User SET Password = ? WHERE UserID = ?`;
+    var sql_trigger =
+    `CREATE TRIGGER UserName
+    BEFORE INSER ON User
+    FOR EACH ROW
+    BEGIN
+        IF NEW.Password IS NULL THEN
+            SET NEW.Password = old.Password;
+        END IF;
+    END;`
+
+    connection.execute(sql_trigger, function(err) {
+            if (err) {
+                console.error('Error creating trigger:', err);
+                return;
+            }
+            console.log('Trigger created successfully');
+        });
+    
+    connection.query(sql, [newPassword, userID], function(err, result) {
+        if (err) {
+          console.error('Error changing password:', err);
+          res.status(500).send({ message: 'Error changing password:', error: err });
+          return;
+        }
+        if(result.affectedRows === 0) {
+          // No rows were affected, meaning no record was found with that ID
+          res.status(404).send({ message: 'Record not found' });
+        } else {
+          res.send({ message: 'Password changed successfully' });
+        }
+      });
+    
+});
+
 // Query for loading the recipes by favorite ranking
 
 app.get('/api/Fav_Ranking', function(req, res) {
@@ -272,12 +288,19 @@ app.get('/api/Users_Ranking', function(req, res) {
     });
 });
 
+
+
 app.post('/api/MyRecipes/insert/:userID', function(req, res) {
     var userID = req.params.userID;
-    var newRecipeTitle=req.params.newRecipeTitle;
-    var newIngredients=req.params.newIngredients;
-    var newDirections=req.params.newDirections;
-
+    var newRecipeTitle=req.body.newRecipeTitle;
+    var newIngredients=req.body.newIngredients;
+    var newDirections=req.body.newDirections;
+    
+    console.log('userIDInsert:',userID);
+    console.log('newRecipeTitle:',newRecipeTitle);
+    console.log('newIngredients:',newIngredients);
+    console.log('newDirections:',newDirections);
+    
     if (!userID) {
         res.status(400).send({ message: 'User ID is required to insert a new recipe' });
         return;
@@ -286,41 +309,30 @@ app.post('/api/MyRecipes/insert/:userID', function(req, res) {
     var sql = `INSERT INTO MyRecipes (UserID, RecipeTitle, Ingredients, Directions)
     VALUES (?, ?, ?, ?);`;
     
-    connection.query(sql, [UserID, RecipeTitle, Ingredients, Directions],function(err, result) {
+    connection.query(sql, [userID, newRecipeTitle, newIngredients, newDirections], function(err, result) {
         if (err) {
-            res.send(err)
-            return;
+          console.error('Error inserting recipe record:', err);
+          res.status(500).send({ message: 'Error inserting recipe record', error: err });
+          return;
         }
-        res.redirect('/success');
-    });
+        if(result.affectedRows === 0) {
+          // No rows were affected, meaning no record was found with that ID
+          res.status(404).send({ message: 'Record not found' });
+        } else {
+          res.send({ message: 'Recipe inserted successfully' });
+        }
+      });
 });
 
-// app.delete('/api/MyRecipes/delete/:userID', function(req, res) {
-//     var userID = req.params.userID;
-//     var recipeTitleDelete=req.params.recipeTitleDelete;
-//     var sql = 'DELETE FROM MyRecipes WHERE UserID = ? and RecipeTitle = ?';
-
-//     connection.query(sql, [userID, recipeTitleDelete], function(err, result) {
-//         if (err) {
-//         console.error('Error deleting recipe record:', err);
-//         res.status(500).send({ message: 'Error deleting recipe record', error: err });
-//         return;
-//         }
-//         if (result.affectedRows === 0) {
-//         // No rows were affected, meaning no record was found with that ID
-//         res.status(404).send({ message: 'Record not found' });
-//         } else {
-//         res.send({ message: 'Recipe record deleted successfully' });
-//         }
-//     });
-// });
-
-app.delete('/api/MyRecipes/delete/:userID/:recipeTitleChosen', function(req, res) {
+app.delete('/api/MyRecipes/delete/:userID', function(req, res) {
     var userID = req.params.userID;
-    var recipeTitleChosen = req.params.recipeTitleChosen;
+    var recipeTitleDelete = req.query.recipeTitleDelete;
+    console.log('userIDdelete:',userID);
+    console.log('recipeTitleDelete:',recipeTitleDelete);
+    
     var sql = 'DELETE FROM MyRecipes WHERE UserID = ? and RecipeTitle = ?';
-
-    connection.query(sql, [userID, recipeTitleChosen], function(err, result) {
+    
+    connection.query(sql, [userID, recipeTitleDelete], function(err, result) {
         if (err) {
             console.error('Error deleting recipe record:', err);
             res.status(500).send({ message: 'Error deleting recipe record', error: err });
@@ -334,6 +346,38 @@ app.delete('/api/MyRecipes/delete/:userID/:recipeTitleChosen', function(req, res
         }
     });
 });
+
+// app.get('/api/GetNumRecipes', function(req, res) {
+//     var ingredient = req.query.ingredient;
+//     var category = req.query.category;
+//     var nutrition = req.query.nutrition;
+//     var greaterThan = req.query.greaterThan;
+//     var lessThan = req.query.lessThan;
+
+//     var sql = 'CALL GetNumRecipes(?, ?, ?, ?, ?)';
+
+//     getNumRecipes(ingredient, category, nutrition, greaterThan, lessThan, function(err, numRecipes) {
+//         if (err) {
+//             res.status(500).send({ message: 'Error fetching number of recipes', error: err });
+//             return;
+//         }
+//         res.json({ numRecipes: numRecipes });
+//     });
+// });
+
+
+// function getNumRecipes(ingredient, category, nutritionGreaterThan, nutritionLessThan, callback) {
+//     var sql = 'CALL GetNumRecipes(?, ?, ?, ?, ?)';
+    
+//     connection.query(sql, [ingredient, category, nutritionGreaterThan, nutritionLessThan], function(err, results) {
+//         if (err) {
+//             console.error('Error calling stored procedure:', err);
+//             callback(err, null);
+//             return;
+//         }
+//         callback(null, results[0][0].numRecipes);
+//     });
+// }
 
 
 app.get('', function(req, res) {

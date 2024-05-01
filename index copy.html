@@ -440,6 +440,32 @@ $(document).ready(function() {
     });
   });
 
+  $('#getNumRecipesBtn').click(function() {
+    var ingredient = $('#ingredientInput').val();
+    var category = $('#categoryInput').val();
+    var nutrition = $('#nutritionInput').val();
+    var greaterThan = $('#greaterThanInput').val();
+    var lessThan = $('#lessThanInput').val();
+
+    $.ajax({
+        url: '/api/GetNumRecipes',
+        method: 'GET',
+        data: {
+            ingredient: ingredient,
+            category: category,
+            nutrition: nutrition,
+            greaterThan: greaterThan,
+            lessThan: lessThan
+        },
+        success: function(response) {
+            alert('Number of recipes: ' + response.numRecipes);
+        },
+        error: function() {
+            alert('Failed to fetch number of recipes.');
+        }
+    });
+});
+
   $(document).ready(function() {
     $('#loadFavoriteRankingBtn').click(function() {
       $.ajax({

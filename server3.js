@@ -291,6 +291,27 @@ app.delete('/api/MyRecipes/delete/:userID', function(req, res) {
     });
 });
 
+app.get('/api/GetNumRecipes', function(req, res) {
+    var ingredient = req.query.ingredient;
+    var category = req.query.category;
+    var nutrition = req.query.nutrition;
+    var greaterThan = req.query.greaterThan;
+    var lessThan = req.query.lessThan;
+
+    var sql = 
+
+    getNumRecipes(ingredient, category, nutrition, greaterThan, lessThan, function(err, numRecipes) {
+        if (err) {
+            res.status(500).send({ message: 'Error fetching number of recipes', error: err });
+            return;
+        }
+        res.json({ numRecipes: numRecipes });
+    });
+});
+
+
+
+
 app.get('', function(req, res) {
     res.render('index', { title: 'CS411 Project' });
 });

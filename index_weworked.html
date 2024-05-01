@@ -61,16 +61,22 @@
         <button type="button" class="btn btn-info mt-3" id="loadFavoriteRankingBtn" data-toggle="modal" data-target="#viewRankingModal">
             View Favorite Ranking
         </button>
-        <button type="button" class="btn btn-info mt-3" id="loadUserRankingBtn" data-toggle="modal" data-target="#viewUserRankingModal">
+        <button type="button" class="btn btn-info mt-3" id="getNumRecipesBtn" data-toggle="modal" data-target="#viewUserRankingModal">
             View User Ranking
         </button>
         <br><br>
     
         <label for="userID">Enter your user ID:</label>
         <input type="text" id="userID" placeholder="Your ID">
+        <button type="button" class="btn btn-info mt-3" id="loadUserInfo" data-toggle="modal" data-target="#viewUserInfo">
+            User Info
+        </button>
         <button type="button" class="btn btn-info mt-3" id="loadMyRecipeBtn" data-toggle="modal" data-target="#viewMyRecipe">
             View MyRecipe
         </button>
+        <button type="button" class="btn btn-info mt-3" id="loadUserRankingBtn" data-toggle="modal" data-target="#viewUserRankingModal">
+          View User Ranking
+      </button>
           <!-- <button type="button" class="btn btn-info mt-3" id="loadFavoriteBtn" data-toggle="modal" data-target="#viewFavoriteModal">
             View Favorite
           </button>
@@ -110,7 +116,41 @@
       </div>
     </div>
   </div> -->
+  <div class="modal fade" id="viewUserInfo" tabindex="-1" role="dialog" aria-labelledby="viewUserInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+        <h5 class="modal-title" id="viewUserInfoModalLabel">My Recipes</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+        </div>
+        <div class="modal-body">
+            <h2>UserInfo</h2>
+            <br><br>
+            <table class="table">
+              <thead>
+              <tr>
+                  <th scope="col">UserID</th>
+                  <th scope="col">UserName</th>
+                  <th scope="col">Password</th>
+              </tr>
+              </thead>
+              <tbody id="userInfoBody">
+              <!-- Attendance rows will be inserted here -->
+              </tbody>
+          </table>
+            <p>Change password to:</p>
+            <input type="text", id="newPassword" />
+            <button type="button" class="btn btn-info mt-3" id="changePassword" >
+                Change
+            </button>
 
+        </div>
+    </div>
+    </div>
+</div>
+</div>
     <div class="modal fade" id="viewMyRecipe" tabindex="-1" role="dialog" aria-labelledby="viewMyRecipeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -276,6 +316,55 @@
         greaterThan = document.getElementById("userInput").value;
     }
 
+    $(document).ready(function() {
+      $('#loadUserInfo').click(function() {
+        var userID = $('#userID').val(); // Ensure this is correctly capturing the input value.
+        console.log("Sending userID:", userID); // Check what's being sent.
+        $.ajax({
+          url: '/api/User',
+          method: 'GET',
+          data: { userID: userID },
+          success: function(data) {
+            var rows = '';
+            data.forEach(function(User, index) {
+              rows += `<tr>
+                        <td>UserID: ${User.UserID}</td>
+                        <td>UserName: ${User.UserName}</td>
+                        <td>Password: ${User.Password}</td>
+                      </tr>`;
+            });
+            $('#userInfoBody').html(rows);
+          },
+          error: function() {
+            alert('Failed to load attendance data.');
+          }
+        });
+      });
+    });
+
+
+    $(document).ready(function() {
+      $('#changePassword').click(function() {
+          var userID = $('#userID').val();
+          var newPassword =$('#newPassword').val();
+
+          $.ajax({
+              url: '/api/User/passwordChange/' + userID,
+              type: 'POST',
+              data: {
+                  userID: userID, newPassword:newPassword
+              },
+              success: function(response) {
+                  alert('Password successfully changed with your userID: ' + userID);
+                  location.reload();
+              },
+              error: function() {
+                  alert('Password is not successfully changed with your userID: ' + userID);
+              }
+          });
+      });
+    });
+
   $(document).ready(function() {
     $('#loadMyRecipeBtn').click(function() {
       var userID = $('#userID').val(); // Ensure this is correctly capturing the input value.
@@ -293,11 +382,8 @@
                        <td>${MyRecipes.Ingredients}</td>
                        <td>${MyRecipes.Directions}</td>
                        <td>
-                        //  <button class="btn btn-warning btn-sm" data-netid="${MyRecipes.RecipeTitle}">Modify</button>
                         <button class="btn btn-danger btn-sm" data-userID="${userID}" data-recipeTitleDelete="${MyRecipes.RecipeTitle}">Delete</button>
-                        <button type="button" class="btn btn-info mt-3" id="deleteMyRecipe" >
-                            Delete
-                        </button>
+                        
                         </td>
                      </tr>`;
           });
@@ -350,36 +436,36 @@ $(document).ready(function() {
       });
   });
 });
-  $(document).ready(function() {
-    $('#loadFoodBtn').click(function() {
-      $.ajax({
-        url: '/api/Food',
-        method: 'GET',
-        success: function(data) {
-          var rows = '';
-          data.forEach(function(Food, index) {
-            rows += `<tr>
-                       <th scope="row">${index + 1}</th>
-                       <td>${Food.FoodName}</td>
-                       <td>${Food.Fat}</td>
-                       <td>${Food.Protein}</td>
-                       <td>${Food.Carbs}</td>
-                       <td>${Food.Measures}</td>
-                       <td>${Food.Category}</td>
-                       <td>
-                         <button class="btn btn-warning btn-sm" data-netid="${Food.FoodName}">Modify</button>
-                         <button class="btn btn-danger btn-sm" data-netid="${Food.Fat}">Delete</button>
-                       </td>
-                     </tr>`;
-          });
-          $('#foodBody').html(rows);
-        },
-        error: function() {
-          alert('Failed to load attendance data.');
-        }
-      });
-    });
-  });
+  // $(document).ready(function() {
+  //   $('#loadFoodBtn').click(function() {
+  //     $.ajax({
+  //       url: '/api/Food',
+  //       method: 'GET',
+  //       success: function(data) {
+  //         var rows = '';
+  //         data.forEach(function(Food, index) {
+  //           rows += `<tr>
+  //                      <th scope="row">${index + 1}</th>
+  //                      <td>${Food.FoodName}</td>
+  //                      <td>${Food.Fat}</td>
+  //                      <td>${Food.Protein}</td>
+  //                      <td>${Food.Carbs}</td>
+  //                      <td>${Food.Measures}</td>
+  //                      <td>${Food.Category}</td>
+  //                      <td>
+  //                        <button class="btn btn-warning btn-sm" data-netid="${Food.FoodName}">Modify</button>
+  //                        <button class="btn btn-danger btn-sm" data-netid="${Food.Fat}">Delete</button>
+  //                      </td>
+  //                    </tr>`;
+  //         });
+  //         $('#foodBody').html(rows);
+  //       },
+  //       error: function() {
+  //         alert('Failed to load attendance data.');
+  //       }
+  //     });
+  //   });
+  // });
 
   $(document).ready(function() {
     $('#loadFavoriteRankingBtn').click(function() {
@@ -429,9 +515,9 @@ $(document).ready(function() {
   $(document).ready(function() {
     $('#submitRecipe').click(function() {
         var userID = $('#userID').val();
-        var newRecipeTitle =$('#newRecipeTitle').val;
-        var newIngredients =$('#newIngredients').val;
-        var newDirections=$('#newDirections').val;
+        var newRecipeTitle =$('#newRecipeTitle').val();
+        var newIngredients =$('#newIngredients').val();
+        var newDirections=$('#newDirections').val();
 
         $.ajax({
             url: '/api/MyRecipes/insert/' + userID,
@@ -450,54 +536,32 @@ $(document).ready(function() {
     });
   });
 
-$(document).on('click', '.btn-warning', function() {
-        var netId = $(this).data('netid');
-        $.ajax({
-            url: '/api/attendance/modify/' + netId,
-            type: 'POST',
-            data: {
-                present: 0
-            },
-            success: function(response) {
-                alert('Attendance modified successfully for Net ID: ' + netId);
-                location.reload();
-            },
-            error: function() {
-                alert('Error modifying attendance for Net ID: ' + netId);
-            }
-        });
-    });
+// $(document).on('click', '.btn-warning', function() {
+//         var netId = $(this).data('netid');
+//         $.ajax({
+//             url: '/api/attendance/modify/' + netId,
+//             type: 'POST',
+//             data: {
+//                 present: 0
+//             },
+//             success: function(response) {
+//                 alert('Attendance modified successfully for Net ID: ' + netId);
+//                 location.reload();
+//             },
+//             error: function() {
+//                 alert('Error modifying attendance for Net ID: ' + netId);
+//             }
+//         });
+//     });
 
-    // $(document).on('click', '.btn-danger', function() {
-    //     var userID = $('#userID').val();
-    //     var recipeTitleDelete = $(this).data('recipeTitleDelete');
-    //     if(confirm('Are you sure you want to delete this recipe for userID: ' + userID + '?')) {
-    //         $.ajax({
-    //             url: '/api/MyRecipes/delete/' + userID,
-    //             type: 'DELETE',
-    //             data: {userID:userID, recipeTitleDelete:recipeTitleDelete},
-    //             success: function(response) {
-    //                 alert('Recipe deleted successfully for userID: ' + userID);
-    //                 location.reload();
-    //             },
-    //             error: function() {
-    //                 alert('Error deleting recipe for userID: ' + userID);
-    //             }
-    //         });
-    //     }
-    // });
-
-    $(document).ready(function() {
-      $('#deleteMyRecipe').click(function() {
-        var userID = $('#userID').val();
-        var recipeTitleChosen = $('#recipeTitleChosen').val();
+    $(document).on('click', '.btn-danger', function() {
+        var userID =  $('#userID').val();
+        var recipeTitleDelete = $(this).data('recipeTitleDelete');
         if(confirm('Are you sure you want to delete this recipe for userID: ' + userID + '?')) {
             $.ajax({
-                url: '/api/MyRecipes/delete/' + userID + '/' + recipeTitleChosen,
+                url: '/api/MyRecipes/delete/' + userID,
                 type: 'DELETE',
-                data: {
-                  userID:userID, recipeTitleChosen:recipeTitleChosen
-                },
+                // data: {userID:userID, recipeTitleDelete:recipeTitleDelete},
                 success: function(response) {
                     alert('Recipe deleted successfully for userID: ' + userID);
                     location.reload();
@@ -508,7 +572,58 @@ $(document).on('click', '.btn-warning', function() {
             });
         }
     });
-  });
+
+//     $('#getNumRecipesBtn').click(function() {
+//     var ingredient = $('#ingredientInput').val();
+//     var category = $('#categoryInput').val();
+//     var nutrition = $('#nutritionInput').val();
+//     var greaterThan = $('#greaterThanInput').val();
+//     var lessThan = $('#lessThanInput').val();
+
+//     $.ajax({
+//         url: '/api/GetNumRecipes',
+//         method: 'GET',
+//         data: {
+//             ingredient: ingredient,
+//             category: category,
+//             nutrition: nutrition,
+//             greaterThan: greaterThan,
+//             lessThan: lessThan
+//         },
+//         success: function(response) {
+//             alert('Number of recipes: ' + response.numRecipes);
+//         },
+//         error: function() {
+//             alert('Failed to fetch number of recipes.');
+//         }
+//     });
+// });
+
+
+    
+
+  //   $(document).ready(function() {
+  //     $('#deleteMyRecipe').click(function() {
+  //       var userID = $('#userID').val();
+  //       var recipeTitleChosen = $('#recipeTitleChosen').val();
+  //       if(confirm('Are you sure you want to delete this recipe for userID: ' + userID + '?')) {
+  //           $.ajax({
+  //               url: '/api/MyRecipes/delete/' + userID + '/' + recipeTitleChosen,
+  //               type: 'DELETE',
+  //               data: {
+  //                 userID:userID, recipeTitleChosen:recipeTitleChosen
+  //               },
+  //               success: function(response) {
+  //                   alert('Recipe deleted successfully for userID: ' + userID);
+  //                   location.reload();
+  //               },
+  //               error: function() {
+  //                   alert('Error deleting recipe for userID: ' + userID);
+  //               }
+  //           });
+  //       }
+  //   });
+  // });
 
   </script>
 </body>
