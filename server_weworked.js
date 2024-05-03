@@ -249,7 +249,16 @@ app.get('/api/MyRecipes/transact/:userID', function(req, res) {
         //add JOIN + GroupBY
     var sql = 
     //BEGIN;
-    `SELECT r.RecipeTitle, r.Ingredients, r.Directions
+    `
+    IF NOT EXISTS (SELECT UserID FROM User WHERE UserName = “username” THEN
+	INSERT INTO User
+	VALUES(“00000”, “username1”);
+    END IF;
+    
+    UPDATE User
+    SET UserName = “newusername”
+    WHERE UserName = “username”
+    SELECT r.RecipeTitle, r.Ingredients, r.Directions
     FROM Recipe r 
     JOIN Food f ON r.Ingredients LIKE CONCAT('%', f.FoodName, '%') 
     WHERE f.Category IN (
