@@ -324,7 +324,7 @@
     $(document).ready(function() {
       $('#transactionBtn').click(function() {
         var userID = $('#userID').val(); // Ensure this is correctly capturing the input value.
-        console.log("Sending userID:", userID); // Check what's being sent.
+        console.log("Sending userID transac:", userID); // Check what's being sent.
         $.ajax({
           url: '/api/MyRecipes/transact/'+ userID,
           method: 'GET',
